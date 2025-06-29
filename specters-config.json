@@ -1,0 +1,132 @@
+{
+  "name": "Specters Application Manager",
+  "version": "1.0.0",
+  "description": "Script de démarrage et d'extinction complet pour l'application Specters",
+  "author": "Specters Team",
+  
+  "services": {
+    "docker": {
+      "enabled": true,
+      "compose_file": "docker-compose.dev.yaml",
+      "services": [
+        {
+          "name": "PostgreSQL",
+          "port": 5432,
+          "timeout": 30,
+          "required": true
+        },
+        {
+          "name": "Redis", 
+          "port": 6379,
+          "timeout": 30,
+          "required": true
+        },
+        {
+          "name": "PgAdmin",
+          "port": 8081,
+          "timeout": 15,
+          "required": false
+        },
+        {
+          "name": "RedisInsight",
+          "port": 5540,
+          "timeout": 15,
+          "required": false
+        }
+      ]
+    },
+    
+    "applications": [
+      {
+        "name": "backend",
+        "command": "pnpm run dev:backend",
+        "port": 3000,
+        "timeout": 60,
+        "required": true,
+        "depends_on": ["PostgreSQL", "Redis"]
+      },
+      {
+        "name": "frontend",
+        "command": "pnpm run dev:frontend", 
+        "port": 4200,
+        "timeout": 60,
+        "required": true,
+        "depends_on": ["backend"]
+      },
+      {
+        "name": "workers",
+        "command": "pnpm run dev:workers",
+        "port": 0,
+        "timeout": 30,
+        "required": false,
+        "depends_on": ["backend", "Redis"]
+      },
+      {
+        "name": "cron",
+        "command": "pnpm run dev:cron",
+        "port": 0,
+        "timeout": 30,
+        "required": false,
+        "depends_on": ["backend"]
+      }
+    ]
+  },
+  
+  "prerequisites": {
+    "node": {
+      "min_version": "20.0.0",
+      "check_command": "node --version"
+    },
+    "pnpm": {
+      "check_command": "pnpm --version"
+    },
+    "docker": {
+      "check_command": "docker --version",
+      "info_command": "docker info"
+    }
+  },
+  
+  "paths": {
+    "logs": "logs",
+    "pids": ".specters-pids",
+    "env": ".env",
+    "env_example": ".env.example"
+  },
+  
+  "timeouts": {
+    "service_start": 60,
+    "service_stop": 30,
+    "docker_start": 60,
+    "docker_stop": 30
+  },
+  
+  "logging": {
+    "level": "INFO",
+    "file": "specters-manager.log",
+    "max_size": "10MB",
+    "rotate": true
+  },
+  
+  "urls": {
+    "frontend": "http://localhost:4200",
+    "backend": "http://localhost:3000",
+    "pgadmin": "http://localhost:8081",
+    "redis_insight": "http://localhost:5540"
+  },
+  
+  "credentials": {
+    "pgadmin": {
+      "email": "admin@admin.com",
+      "password": "admin"
+    }
+  },
+  
+  "features": {
+    "auto_install_dependencies": true,
+    "auto_setup_database": true,
+    "auto_create_env": true,
+    "health_checks": true,
+    "process_monitoring": true,
+    "log_rotation": false
+  }
+}
